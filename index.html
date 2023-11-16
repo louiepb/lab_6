@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab 6</title>
+
+         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+           crossorigin=""/>
+		   
+		            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+           crossorigin=""></script>
+		   
+		   <link href='https://fonts.googleapis.com/css?family=Autour One' rel='stylesheet'>
+		   
+		     <style type="text/css">
+  html, body { margin: 0; padding: 0; height: 100%; }
+  #map { min-height: 100%; }
+  
+  .title {
+    padding: 6px 8px;
+    font-family: 'Autour One';
+	font-size: 16px;
+	color: rgb(251, 253, 248);
+    background: rgb(165, 146, 203);
+    box-shadow: 0 0 20px rgb(1, 1, 4);
+    border-radius: 5px;
+}
+</style>
+		   
+		 <script type="text/javascript" src="cookin.js"></script>
+		 
+		 <!-- Load animation tweening library requirement for CanvasFlowMapLayer -->
+<script src="https://unpkg.com/@tweenjs/tween.js@18.6.4/dist/tween.umd.js"></script>
+
+<!-- Load CanvasFlowMapLayer; change the path (relative URL) if necessary -->
+<script src="CanvasFlowmapLayer.js"></script>
+
+    </head>
+	<body>
+        <div id="map" style="height: 500px"></div>
+
+        <script type="text/javascript">
+
+          var map = L.map('map', {
+              center: [38,-101],
+              zoom: 4.3
+          });
+		  
+L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+           attribution: 'Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.',
+           maxZoom: 16,
+           minZoom: 1
+         }).addTo(map);
+		 
+		 L.geoJson(data).addTo(map);
+		 
+		         L.canvasFlowmapLayer(data, { //data is the variable name I used for defining the cook.js data
+          originAndDestinationFieldIds: {
+            originUniqueIdField: 'GEOID_B',  //origin ID, use GEOID_A if you want to reverse the flow
+            originGeometry: { //origin coordinates 
+              x: 'B_lon',
+              y: 'B_lat'
+            },
+            destinationUniqueIdField: 'GEOID_A', //destination ID
+            destinationGeometry: { //destination coordinates
+              x: 'A_lon',
+              y: 'A_lat'
+            }
+          },
+		  
+
+          canvasBezierStyle: {
+          //This example demonstrates the use of graduated symbols (class breaks) for the flowlines
+          //Other options: https://developers.arcgis.com/documentation/common-data-types/renderer-objects.htm
+            type: 'classBreaks',
+            field: "Flow_B2A", // The field/value to be used for symbolizing the lines
+
+            // Define the classes and symbols below
+            classBreakInfos: [{
+              classMinValue: 916,  // break values of this class, using field values defined above
+              classMaxValue: 958,
+              symbol: {  // Define the symbology for this class
+                         // See an example from the documentation:https://github.com/jwasilgeo/Leaflet.Canvas-Flowmap-Layer/blob/master/docs/class-breaks-symbology/index.html#L94-L137
+                strokeStyle: '#cc3399',  // flow line color
+                lineWidth: 10,  // flow line width
+                lineCap: 'round',  // shape of the stroke end
+              }
+            }, {  // another class
+              classMinValue: 842,
+              classMaxValue: 880,
+              symbol: {
+                strokeStyle: '#db70b8',
+                lineWidth: 6,
+                lineCap: 'round',
+              }
+			   }
+            , {  // another class
+              classMinValue: 809,
+              classMaxValue: 831,
+              symbol: {
+                strokeStyle: '#ebadd6',
+                lineWidth: 6,
+                lineCap: 'round',
+              }
+            }],
+			
+			style: function(geoJsonFeature) {
+  // use leaflet's path styling options
+
+  // since the GeoJSON feature properties are modified by the layer,
+  // developers can rely on the "isOrigin" property to set different
+  // symbols for origin vs destination CircleMarker stylings
+
+  if (geoJsonFeature.properties.isOrigin) {
+    return {
+      renderer: canvasRenderer, // recommended to use your own L.canvas()
+      radius: 5,
+      weight: 1,
+      color: 'rgb(195, 255, 62)',
+      fillColor: 'rgba(195, 255, 62, 0.6)',
+      fillOpacity: 0.6
+    };
+  } else {
+    return {
+      renderer: canvasRenderer,
+      radius: 2.5,
+      weight: 0.25,
+      color: 'rgb(17, 142, 170)',
+      fillColor: 'rgb(17, 142, 170)',
+      fillOpacity: 0.7
+    };
+  }
+}
+          },
+
+          // Some options to customize the flow map, check out the link below for more
+          // https://github.com/jwasilgeo/Leaflet.Canvas-Flowmap-Layer#options-and-property-summary
+          pathDisplayMode: 'all',
+          animationStarted: true,
+          animationEasingFamily: 'Cubic', // Compare the options:
+                                          // https://jwasilgeo.github.io/Leaflet.Canvas-Flowmap-Layer/docs/comparison/
+          animationEasingType: 'In',
+          animationDuration: 2000  // in millisecond, the larger the number the slower
+        }).addTo(map);
+		
+		  var title = L.control({position: 'topright'}); // position of the title
+
+title.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'title'); // create a div with a class "title"
+    this._div.innerHTML = "<h3>TOP 10 Inflow Migration to Cook County, Illinois</h3>";  // Title text, may use html to customize
+    return this._div;
+};
+
+title.addTo(map);
+        </script>
+   </body>
+</html>
